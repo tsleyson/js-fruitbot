@@ -153,12 +153,17 @@ function path_lookup(i, j) {
     return movements;
 }
 
-function evaluate_space(board, spacex, spacey) {
+function evaluate_space(board, space, origin) {
     // Determine the value of a space on the board.
     // For now just return 0 for empty and 1 for a space
     // with a fruit.
-    if (board[spacex][spacey] > 0) {
-        return 1;
+    var spaceval = board[spacex][spacey];
+    if (spaceval > 0) {
+        // See notes for the logic here.
+        var fruitval = get_total_item_count(spaceval) /
+            get_my_item_count(spaceval);
+        return fruitval - ((space[0] - origin[0]) +
+                           (space[1] - origin[1]))/2;
     }
     return 0;
 }
@@ -178,8 +183,8 @@ function shuffle_array(a) {
 
 function make_move() {
     var board = get_board();
-    var x = get_my_x(), y = get_my_y();
-    if (evaluate_space(board, x, y))
+    var origin = [get_my_x(), y = get_my_y()];
+    if (evaluate_space(board, origin, origin))
         return TAKE;
     if (!current_path || current_path.length == 0) {
         var next_dest;
@@ -187,10 +192,10 @@ function make_move() {
         for (var r = 1; ; ++r) {
             // Search for a space with a fruit on it.
             var spaces = within_radius([x, y], r);
-            shuffle_array(spaces);  // Try to get better results.
+            var valuations = {};
             for (var i = 0; i < spaces.length; ++i) {
                 var space = spaces[i];
-                if (evaluate_space(board, space[0], space[1])) {
+                if (evaluate_space(board, space, [x, y])) {
                     next_dest = space;
                     break next_move;
                 }
@@ -219,3 +224,4 @@ function default_board_number() {
      some ideas; see the notes.
    - Don't set a path and then mindlessly follow it to the end;
      do some reevaluation as you go.
+*/

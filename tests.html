@@ -1,0 +1,33 @@
+<html>
+<head>
+<script src="assets/js/seedrandom.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/grid.js"></script>
+<script src="mybot.js"></script>
+<script src="assets/js/simplebot.js"></script>
+<!--<script src="assets/js/player.js"></script>-->
+<script src="assets/js/jquery.min.js"></script>
+<script type="text/javascript">
+  function start_game() {
+      var numtrials = 10000;  // The number of test games to play.
+      var nextBoardNum;
+      var numwins = 0;
+      for (var i = 0; i < numtrials; ++i) {
+          // Use a random board every time.
+          Math.seedrandom();
+          nextBoardNum = Math.min(Math.floor(Math.random() * 999999), 999999);
+          Board.init(nextBoardNum);
+          Board.newGame();
+          while(!Board.checkGameOver()) {
+              Board.processMove();
+          }
+          if (Board.checkGameOver() > 0) 
+              ++numwins;
+      }
+      return numwins / numtrials;
+  }
+</script>
+</head>
+<body onload="document.write(start_game());">
+</body>
+</html>
