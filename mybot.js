@@ -1,6 +1,7 @@
 var shortest_paths;  // Do not write after initial setting.
 var predecessors;
 var current_path;  // Will be written by make_move
+var next_dest;
 
 function xy_to_vertex_number(x, y) {
     return y * WIDTH + x;
@@ -95,6 +96,8 @@ function new_game() {
     }
     shortest_paths = current_paths;
     predecessors = current_preds;
+    next_dest = {"coords" : [0, 0], "value" : 0};
+    // Otherwise we get leftovers from previous games.
 }
 
 function within_radius(origin, r) {
@@ -157,13 +160,14 @@ function evaluate_space(board, space, origin) {
     // Determine the value of a space on the board.
     // For now just return 0 for empty and 1 for a space
     // with a fruit.
-    var spaceval = board[spacex][spacey];
+    var spaceval = board[space[0]][space[1]];
     if (spaceval > 0) {
         // See notes for the logic here.
         var fruitval = get_total_item_count(spaceval) /
             get_my_item_count(spaceval);
-        return fruitval - ((space[0] - origin[0]) +
-                           (space[1] - origin[1]))/2;
+        var xdist = space[0] - origin[0];
+        var ydist = space[1] - origin[1];
+        return fruitval/Math.sqrt(xdist*xdist + ydist*ydist);
     }
     return 0;
 }
@@ -181,29 +185,52 @@ function shuffle_array(a) {
     }
 }
 
+function best_of(v) {
+    // Finds the three most valuable spaces in an object
+    // of space : valuation pairs and returns one at random.
+    var topthree = [{"coords" : null, "value" : -Infinity}];
+    for (var r in v) {
+        if (v[r].value > topthree[0].value) {
+            topthree.push(v[r]);
+            if (topthree.length >= 3) topthree.shift();
+            topthree.sort();
+        }
+    }
+    shuffle_array(topthree);
+    return topthree[0];
+}
+            
 function make_move() {
     var board = get_board();
     var origin = [get_my_x(), y = get_my_y()];
     if (evaluate_space(board, origin, origin))
         return TAKE;
-    if (!current_path || current_path.length == 0) {
-        var next_dest;
-        next_move:
-        for (var r = 1; ; ++r) {
+    if (!current_path ||
+        current_path.length == 0 ||
+        evaluate_space(board, next_dest.coords, origin) != next_dest.value)
+    {
+        var valuations = {};
+        for (var r = 1; r < Math.floor(Math.max(HEIGHT, WIDTH)); ++r) {
             // Search for a space with a fruit on it.
-            var spaces = within_radius([x, y], r);
-            var valuations = {};
+            var spaces = within_radius(origin, r);
+            var current_value = -Infinity;
+            var current_best;
             for (var i = 0; i < spaces.length; ++i) {
                 var space = spaces[i];
-                if (evaluate_space(board, space, [x, y])) {
-                    next_dest = space;
-                    break next_move;
+                var spacevalue = evaluate_space(board, space, origin);
+                if (spacevalue > current_value) {
+                    current_best = space;
+                    current_value = spacevalue;
                 }
             }
+            valuations[r] = {"coords" : current_best,
+                             "value" : current_value};
         }
-            var current_pos = xy_to_vertex_number(x, y);
-            var next_pos = xy_to_vertex_number(next_dest[0], next_dest[1]);
-            current_path = path_lookup(current_pos, next_pos);
+        next_dest = best_of(valuations);
+        var current_pos = xy_to_vertex_number(origin[0], origin[1]);
+        var next_pos = xy_to_vertex_number(next_dest.coords[0],
+                                           next_dest.coords[1]);
+        current_path = path_lookup(current_pos, next_pos);
     }
     return current_path.shift();
 }
@@ -212,9 +239,9 @@ function make_move() {
 // certain board number/layout. This is useful for repeatedly testing your
 // bot(s) against known positions.
 //
-function default_board_number() {
-   return 123;
-}
+//function default_board_number() {
+//   return 123;
+//}
 
 /* Three things to improve on:
    - Avoid ties. Maybe save the most valuable space from each
@@ -224,4 +251,12 @@ function default_board_number() {
      some ideas; see the notes.
    - Don't set a path and then mindlessly follow it to the end;
      do some reevaluation as you go.
+
+     Second and third both have some improvements. I want to try
+     randomizing again. Maybe instead of always picking the highest
+     value, get the top three or top five and choose one at random.
+     Some boards just kill me now, but I think randomization could
+     help with that.
 */
+
+// Infinite back and forth on board 115561
