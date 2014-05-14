@@ -158,8 +158,6 @@ function path_lookup(i, j) {
 
 function evaluate_space(board, space, origin) {
     // Determine the value of a space on the board.
-    // For now just return 0 for empty and 1 for a space
-    // with a fruit.
     var spaceval = board[space[0]][space[1]];
     if (spaceval > 0) {
         // See notes for the logic here.
@@ -167,7 +165,7 @@ function evaluate_space(board, space, origin) {
             get_my_item_count(spaceval);
         var xdist = space[0] - origin[0];
         var ydist = space[1] - origin[1];
-        return fruitval/Math.sqrt(xdist*xdist + ydist*ydist);
+        return fruitval/Math.pow(2, (xdist*xdist + ydist*ydist));
     }
     return 0;
 }
@@ -186,18 +184,15 @@ function shuffle_array(a) {
 }
 
 function best_of(v) {
-    // Finds the three most valuable spaces in an object
-    // of space : valuation pairs and returns one at random.
-    var topthree = [{"coords" : null, "value" : -Infinity}];
+    // Finds the most valuable space in an object
+    // of space : valuation pairs.
+    var best = {"coords" : null, "value" : -Infinity};
     for (var r in v) {
-        if (v[r].value > topthree[0].value) {
-            topthree.push(v[r]);
-            if (topthree.length >= 3) topthree.shift();
-            topthree.sort();
+        if (v[r].value > best.value) {
+            best = v[r];
         }
     }
-    shuffle_array(topthree);
-    return topthree[0];
+    return best;
 }
             
 function make_move() {
@@ -257,6 +252,10 @@ function make_move() {
      value, get the top three or top five and choose one at random.
      Some boards just kill me now, but I think randomization could
      help with that.
+
+     No, randomizing sucks. But try this: use different evaluation
+     functions depending on how much of the fruit is left. Penalize
+     distance more heavily when there aren't as many fruits left.
 */
 
 // Infinite back and forth on board 115561
