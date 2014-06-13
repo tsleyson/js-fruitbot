@@ -1,3 +1,14 @@
+I cloned the test framework repo, made my modifications in mybot.js, and then added a new remote to the local repo so I could
+store my own changes on GitHub without having to move everything to a new repo.
+
+This bot uses Floyd-Warshall to calculate and memoize the shortest paths so it can always find the nearest fruit. While 
+this was somewhat overkill, it saves a little thinking time and gave me an excuse to try out some dynamic programming.
+The bot evaluates fruits according to how far away they are, how many of the type are on the board, and whether the
+opponent currently has more. The evaluation formula is given in the notes file.
+
+I haven't entered it in the competition yet. I wanted to tune it a little more, and then looking for a job started taking up
+more and more time.
+
 Welcome!
 
 Modify mybot.js to start writing your bot. Opening game.html will allow you to generate random boards, and either watch your bot play or step through one move at a time. Refer to http://fruitbots.org/api/api for available methods. gl/hf!
